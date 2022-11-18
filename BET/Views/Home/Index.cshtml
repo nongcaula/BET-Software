@@ -1,0 +1,163 @@
+﻿@model IEnumerable<Product>
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<head>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link href="https://cdn.datatables.net/1.10.23/css/dataTables.bootstrap4.min.css">
+    <script src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.23/js/dataTables.bootstrap5.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+    <style>
+
+        #products_filter {
+            float: right;
+        }
+
+        #products_paginate {
+            float: right;
+        }
+
+        .row {
+            display: flex;
+            justify-content: left;
+        }
+
+        #products {
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<section class="h-100 h-custom w" style="background-color: #eee;">
+    <div class="container py-2 h-100">
+        <div class="row d-flex justify-content-center align-items-center h-100">
+            <div class="col">
+                <div class="card">
+                    <div class="card-body p-4">
+                       
+                        <table id="products">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody class="row col-sm-12">
+
+                                @foreach (var product in Model)
+                                {
+                                    <tr class="col-sm-6">
+                                        <td class="card mb-12  shadow-sm p-3 mb-2 bg-white rounded">
+                                            <div>
+                                                <div class="card-body ">
+                                                    <div class="d-flex justify-content-between">
+                                                        <div class="d-flex flex-row align-items-left">
+                                                            <div>
+                                                                <img src="data:image/png;base64,@product.Img"
+                                                                 class="img-fluid rounded-3" alt="Shopping item" style="width: 150px; height:100px">
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <h6>@product.Name</h6>
+                                                                <p class="small mb-2">@product.Description</p>
+                                                            </div>
+
+                                                        </div>
+                                                        <div class="d-flex flex-row align-items-center">
+                                                            <div style="width: 100px;">
+                                                                <h6 class="mb-0">R @product.Price</h6>
+                                                            </div>
+                                                            <div style="width: 60px;">
+                                                                <select id="quantity_@product.Id" class="form-select form-select-sm">
+                                                                    <option value="0">0</option>
+                                                                    @{
+                                                                        for (int i = 1; i <= product.Quantity; i++)
+                                                                        {
+                                                                            <option value="@i">@i</option>
+                                                                        }
+                                                                    }
+                                                                </select>
+                                                            </div>
+
+                                                            <button class="btn btn-sm btn-outline-warning" id="btn_@product.Id" onclick="AddtoCart(@product.Id)"><i class="fa fa-cart-plus"></i> </button>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                        </td>
+                                    </tr>
+                                }
+
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Product</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function CheckOut() {
+        window.location.href = "/Home/CheckOut";
+    }
+    function AddtoCart(id) {
+        var qauntity = $("#quantity_" + id).val();
+        if (qauntity == 0) {
+            alert("Quantity cannot be 0");
+        }
+        else {
+            $.post("/Home/AddtoCart/?id=" + id + "&quantity=" + qauntity, function (data) {
+                $("#btn_" + id).removeClass("btn-outline-warning");
+                $("#btn_" + id).addClass("btn-success");
+                GetCartCounter(); // Update cart
+            });
+        }
+    }
+    $("#cartIcon").click(function () {
+        $("#modalBody").load("/Home/ViewCart");
+        $("#editModalLabel").text("Shopping Cart");
+        $("#editModal").modal("show");
+    });
+
+    $("#badge").click(function () {
+        $("#modalBody").load("/Home/ViewCart");
+
+        $("#editModalLabel").text("Shopping Cart");
+        $("#editModal").modal("show");
+    });
+
+    $(document).ready(function () {
+        GetCartCounter();
+        $.noConflict();
+        var table = $('#products').DataTable({
+            "pageLength": 10
+        })
+    });
+</script>

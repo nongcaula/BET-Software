@@ -1,0 +1,74 @@
+﻿@model BET.Models.Product
+@{
+    Layout = null;
+}
+
+<style>
+    .form-check-input {
+        margin-left: 2px;
+        position: unset;
+    }
+</style>
+<div class="row">
+    <div class="col-md-10">
+        @{
+            var productImg = string.IsNullOrEmpty(@Model.Img);
+        }
+        @using (Html.BeginForm("Edit", "Stock", FormMethod.Post, new { enctype = "multipart/form-data", id = "editStockFrm" }))
+        {
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Img" />
+            <div class="form-group">
+                <img class="card-img-top w-80" style="width:180px!important;height:150px" id="image" src="data:image/png;base64,@Model.Img" alt="No Product Image"> <img />
+            </div>
+            <div class="form-group">
+                <input type="file" id="file" name="upload">
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Quantity" class="control-label"></label>
+                <input asp-for="Quantity" class="form-control" />
+                <span asp-validation-for="Quantity" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Price" class="control-label"></label>
+                <input asp-for="Price" class="form-control" />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsDiscontinued" />
+                    @Html.DisplayNameFor(model => model.IsDiscontinued)
+                </label>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+
+    document.getElementById('file').onchange = function () {
+        var src = URL.createObjectURL(this.files[0])
+        document.getElementById('image').src = src
+    }
+</script>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    }
