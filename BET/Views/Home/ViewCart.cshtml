@@ -13,6 +13,7 @@
         sumQuantity += item.Quantity;
     }
 }
+
 <section class="h-100 h-custom w" style="background-color: #eee;">
     <div class="container py-2 h-100">
         <div class="row d-flex justify-content-center align-items-center h-100">
@@ -33,13 +34,13 @@
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <div>
                                         <p class="mb-1">Shopping cart</p>
-                                        <p class="mb-0">You have @sumQuantity items in your cart</p>
+                                        <p class="mb-0" id="cartCount">You have @sumQuantity items in your cart</p>
                                     </div>
 
                                 </div>
                                 @foreach (var product in Model)
                                 {
-                                    <div class="card mb-3">
+                                    <div class="card mb-3" id="Cart_@product.Id">
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between">
                                                 <div class="d-flex flex-row align-items-center">
@@ -59,7 +60,8 @@
                                                     <div style="width: 80px;">
                                                         <h6 class="mb-0 text-center ">R @product.Price</h6>
                                                     </div>
-                                                    <a href="#!" style="color: #cecece;"><i class="fas fa-trash-alt"></i></a>
+                                                    <a style="color: red;" onclick="ConfirmCartRemoval(@product.Id)"><i class="fa fa-trash"></i></a>
+
                                                 </div>
                                             </div>
                                         </div>
@@ -67,17 +69,17 @@
                                 }
                             </div>
                             <div class="col-lg-5">
-                            
+
                                 <div class="card bg-primary text-white rounded-3">
                                     <div class="card-body">
 
                                         <div class="d-flex justify-content-between">
                                             <p class="mb-2">Subtotal</p>
-                                            <p class="mb-2">R @runningTotal</p>
+                                            <p class="mb-2" id="runningTotal1">R @runningTotal</p>
                                         </div>
                                         <button type="button" class="btn btn-info btn-block btn-lg" onclick="CheckOut()">
                                             <div class="d-flex justify-content-between">
-                                                <span>R @runningTotal </span>
+                                                <span id="runningTotal">R @runningTotal </span>
                                                 <span>Checkout <i class="fas fa-long-arrow-alt-right ms-2"></i></span>
                                             </div>
                                         </button>
@@ -95,3 +97,44 @@
         </div>
     </div>
 </section>
+  <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/dist/notify.js"></script>
+    <script src="~/dist/notify.min.js"></script>
+<script>
+    function ConfirmCartRemoval(id) {
+        var retVal = confirm("Are you sure Remove this item?");
+        if (retVal == true) {
+            $.get("/Home/RemoveItemFromCart/" + id, function (data) {
+                // Best solution is to use Signal R to update counter.
+                if (data == true) {
+                    $.notify("Item Removed from your cart", "success");
+                    $("#Cart_" + id).remove();
+                    UpdateInnerCartConter();
+                    UpdateRUnningTotal();
+                    GetCartCounter(); // Update cart
+                }
+                else return;
+            });
+
+        }
+        else {
+            return false;
+        }
+    }
+    function UpdateRUnningTotal() {
+        $.get("/Home/GetRunningTotal", function (data) {
+            var runningtotal = "R " + data;
+            $("#runningTotal").text(runningtotal);
+            $("#runningTotal1").text(runningtotal);
+
+        });
+
+    }
+
+    function UpdateInnerCartConter() {
+        $.get("/Home/CartItemCounter", function (data) {
+            var countMsg = "You have " + data + " in your cart"
+            $("#cartCount").text(countMsg);
+        });
+    }
+</script>

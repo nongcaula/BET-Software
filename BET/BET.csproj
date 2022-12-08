@@ -8,9 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="wwwroot\dist\notifications.css" />
+    <None Include="wwwroot\dist\notifications.js" />
+    <None Include="wwwroot\Resources\default.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="datatables.net-bs5" Version="1.13.1" />
     <PackageReference Include="datatables.net-buttons-bs5" Version="2.3.2" />
     <PackageReference Include="datatables.net-dt" Version="1.13.1" />
+    <PackageReference Include="Elmah.Io.AspNetCore" Version="4.2.42" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.0" />

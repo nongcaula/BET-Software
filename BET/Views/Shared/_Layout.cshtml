@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -29,20 +32,26 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        @if (User.IsInRole("Admin"))
-                        {
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <ul class="navbar-nav flex-grow-1">
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Stock" asp-action="Index">Manage Products</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                             </li>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Stock" asp-action="Index">Manage Products</a>
+                                </li>
+                            }
+                        </ul>
+                        @if (!User.IsInRole("Admin"))
+                        {
+                            <i class='fa fa-shopping-cart' style="font-size: 25px" id="cartIcon" onclick="ViewCart()">
+                                <a class="badge rounded-pill badge-notification bg-danger" id="badge" onclick="ViewCart()">0</a>
+                            </i>
                         }
-                    </ul>
-                    <i class='fa fa-shopping-cart' style="font-size: 25px" id="cartIcon">
-                        <a href="#" class="badge rounded-pill badge-notification bg-danger" id="badge">0</a>
-                    </i>
+                    }
                     <partial name="_LoginPartial" />
                 </div>
             </div>
@@ -67,6 +76,22 @@
 
 <script>
 
+    function ViewCart() {
+        $("#modalBody").load("/Home/ViewCart");
+        $("#editModalLabel").text("Shopping Cart");
+        $("#editModal").modal("show");
+        //$("#cartIcon").click(function () {
+        //    $("#modalBody").load("/Home/ViewCart");
+        //    $("#editModalLabel").text("Shopping Cart");
+        //    $("#editModal").modal("show");
+        //});
+
+        //$("#badge").click(function () {
+        //    $("#modalBody").load("/Home/ViewCart");
+        //    $("#editModalLabel").text("Shopping Cart");
+        //    $("#editModal").modal("show");
+        //});
+    }
 
     $(document).ready(function () {
         GetCartCounter();

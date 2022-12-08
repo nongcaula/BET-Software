@@ -11,7 +11,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-
+    <link rel="stylesheet" href="/dist/notifications.css">
+    <script src="/dist/notifications.js"></script>
     <style>
 
   
@@ -53,7 +54,7 @@
 
                                 @foreach (var product in Model)
                                 {
-                                    <tr class="col-sm-4">
+                                    <tr class="col-sm-3">
                                         <td class="card mb-12  shadow-sm p-3 mb-2 bg-white rounded">
                                             <div class="card" style="width: auto;height:auto;">
                                                 <img class="card-img-top align-self-auto" src="data:image/png;base64,@product.Img" height="150" alt="No Product Image">
@@ -117,6 +118,7 @@
         }
     }
 
+   
 
     function OpenEditModal(id) {
         $("#editModal").modal('show');
@@ -125,6 +127,7 @@
         })
     }
 
+  
 
     $(document).ready(function () {
         $.noConflict();

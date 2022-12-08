@@ -22,10 +22,18 @@ namespace BET.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
         }
-
+        private void ClearCart()
+        {
+            var keys = HttpContext.Session.Keys;
+            foreach (var key in keys)
+            {
+                HttpContext.Session.Remove(key);
+            }
+        }
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
             await _signInManager.SignOutAsync();
+            ClearCart(); 
             _logger.LogInformation("User logged out.");
             if (returnUrl != null)
             {

@@ -43,6 +43,7 @@ namespace BET.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _userManager.Options.SignIn.RequireConfirmedAccount = true;
         }
 
         /// <summary>

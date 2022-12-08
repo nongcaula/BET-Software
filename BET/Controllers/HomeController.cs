@@ -1,8 +1,11 @@
-﻿using BET.Areas.Identity.Pages.Account;
+﻿using Azure.Core;
+using BET.Areas.Identity.Pages.Account;
 using BET.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using NuGet.Protocol.Plugins;
@@ -15,36 +18,50 @@ using System.Text;
 
 namespace BET.Controllers
 {
+
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        string baseurl = "https://localhost:7200/";
+        readonly string baseurl = "https://localhost:7200/";
+        private readonly HttpClient _httpClient;
         public HomeController(ILogger<HomeController> logger)
         {
+            _httpClient = GetHttpClient();
             _logger = logger;
         }
 
         public async Task<ActionResult> Index()
         {
-            List<Product> products = new List<Product>();
-            var apiKey = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("XApiKey");
-            HttpClient client = GetHttpClient(apiKey);
-            HttpResponseMessage res = await client.GetAsync("api/Product");
-            if (res.IsSuccessStatusCode)
+            if (User.Identity.IsAuthenticated)
             {
-                var productsResponse = res.Content.ReadAsStringAsync().Result;
-                products = JsonConvert.DeserializeObject<List<Product>>(productsResponse);
-            }
-            return View(products);
+                List<Product> products = new List<Product>();
 
+                HttpResponseMessage res = await _httpClient.GetAsync("api/Product");
+                if (res.IsSuccessStatusCode)
+                {
+                    var productsResponse = res.Content.ReadAsStringAsync().Result;
+                    products = JsonConvert.DeserializeObject<List<Product>>(productsResponse);
+                }
+                return View(products.Where(x => x.IsDiscontinued == false));
+            }
+            else
+            {
+                string loginUrl = ReturnLoginUrl();
+                return Redirect(loginUrl);
+            }
+        }
+
+        private string ReturnLoginUrl()
+        {
+            var request = HttpContext.Request;
+            var loginUrl = request.Scheme + "://" + request.Host.Value + "/Identity/Account/Login";
+            return loginUrl;
         }
 
         private async Task<Product> GetProductById(int id)
         {
             Product product = new();
-            var apiKey = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("XApiKey");
-            HttpClient client = GetHttpClient(apiKey);
-            HttpResponseMessage res = await client.GetAsync("api/Product/" + id);
+            HttpResponseMessage res = await _httpClient.GetAsync("api/Product/" + id);
             if (res.IsSuccessStatusCode)
             {
                 var productsResponse = res.Content.ReadAsStringAsync().Result;
@@ -53,8 +70,9 @@ namespace BET.Controllers
             return product;
         }
 
-        private HttpClient GetHttpClient(IConfigurationSection apiKey)
+        private HttpClient GetHttpClient()
         {
+            var apiKey = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("XApiKey");
             var client = new HttpClient();
             client.BaseAddress = new Uri(baseurl);
             client.DefaultRequestHeaders.Clear();
@@ -66,11 +84,29 @@ namespace BET.Controllers
         [HttpPost]
         public async Task<string> AddtoCart(int id, int quantity)
         {
-            var product = await GetProductById(id);
-            product.Quantity = quantity;
-            HttpContext.Session.SetString(id.ToString(), JsonConvert.SerializeObject(product));
-            CartItemCounter();
-            return "Item added to Cart";
+            if (User.Identity.IsAuthenticated) // Remove this line if in future the user doesn't need to be authenticated to use the product
+            {
+                var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var product = await GetProductById(id);
+                product.Quantity = quantity;
+                HttpContext.Session.SetString(id.ToString(), JsonConvert.SerializeObject(product));
+                CartItemCounter();
+                return "Item added to Cart";
+            }
+            return "Uauthorized";
+        }
+      
+        public bool RemoveItemFromCart(int id)
+        {
+            try
+            {
+                HttpContext.Session.Remove(id.ToString());
+                CartItemCounter();
+                return true;
+            } catch (Exception ex)
+            {
+                return false;
+            }
         }
 
         private void ClearCart()
@@ -87,6 +123,17 @@ namespace BET.Controllers
             return View(products);
         }
 
+        public int GetRunningTotal()
+        {
+            var keys = HttpContext.Session.Keys;
+            var total = 0;
+            foreach (var key in keys)
+            {
+                var product = JsonConvert.DeserializeObject<Product>(HttpContext.Session.GetString(key));
+                total += (int)product.Quantity * (int)product.Price;
+            }
+            return total;
+        }
         private List<Product> GetProducts()
         {
             var keys = HttpContext.Session.Keys;
@@ -103,11 +150,9 @@ namespace BET.Controllers
             if (User.Identity.IsAuthenticated)
             {
                 var transactions = GetTransactions();
-                var apiKey = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("XApiKey");
-                HttpClient client = GetHttpClient(apiKey);
                 string json = JsonConvert.SerializeObject(transactions);
                 var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
-                HttpResponseMessage res = await client.PostAsync("api/Transactions", httpContent);
+                HttpResponseMessage res = await _httpClient.PostAsync("api/Transactions", httpContent);
                 if (res.IsSuccessStatusCode)
                 {
                     ClearCart();
@@ -117,8 +162,7 @@ namespace BET.Controllers
             }
             else
             {
-                var request = HttpContext.Request;
-                var loginUrl = request.Scheme + "://" + request.Host.Value + "/Identity/Account/Login";
+                string loginUrl = ReturnLoginUrl();
                 return Redirect(loginUrl);
             }
         }
